@@ -17,6 +17,7 @@ Canonical conventions for workloads deployed to the **vps-playground** VPS.
 |---|---|---|---|
 | [0001](adr/0001-platform-conventions-location.md) | Conventions repo location & consumption model | Accepted | Conventions live in `vps-playground/platform-conventions`, consumed by WebFetch from each workload's `CLAUDE.md`. |
 | [0002](adr/0002-healthcheck-endpoint.md) | Dedicated `/healthz` healthcheck endpoint | Proposed | Every workload exposes `/healthz` returning plain `200 ok`; Dockerfile `HEALTHCHECK` targets it. Auth-exempt. |
+| [0003](adr/0003-container-image-build-conventions.md) | Container image build conventions | Proposed | Workload images are multi-stage and run as a non-root user. |
 
 ## Status values
 
