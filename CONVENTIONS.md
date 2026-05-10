@@ -16,6 +16,7 @@ Canonical conventions for workloads deployed to the **vps-playground** VPS.
 | ID | Topic | Status | Summary |
 |---|---|---|---|
 | [0001](adr/0001-platform-conventions-location.md) | Conventions repo location & consumption model | Accepted | Conventions live in `vps-playground/platform-conventions`, consumed by WebFetch from each workload's `CLAUDE.md`. |
+| [0004](adr/0004-constant-time-secret-compare.md) | Constant-time comparison for secrets | Proposed | Compare secrets with the stack's standard primitive (`crypto.timingSafeEqual`, `hmac.compare_digest`, `subtle.ConstantTimeCompare`). HMAC-normalize when length is sensitive. |
 
 ## Status values
 
