@@ -12,7 +12,7 @@ A workload that persists data needs to behave the same in three environments:
 - Container on the VPS (`/data/...`, mounted from a Coolify-managed named volume)
 - A future migrated host (different absolute paths)
 
-solarscout initially hardcoded local-laptop paths into a SQLite column (`runs.output_dir = "/Users/agr/.../output/run-..."`), and migrating to the VPS volume required a one-shot `migrate-paths` helper to rewrite legacy rows. That migration was avoidable — and the next workload should not repeat the mistake.
+An early workload on this VPS hardcoded local-laptop paths into a database column (e.g. `/Users/.../output/run-...`), and migrating to the container volume required a one-shot helper to rewrite legacy rows. That migration was avoidable — and the next workload should not repeat the mistake.
 
 ## Decision
 
@@ -31,6 +31,6 @@ Two rules apply to every workload that persists state:
 ## Alternatives considered
 
 - **Hardcoded paths** — simpler initially; breaks on every environment that isn't the original author's machine. The default mistake.
-- **Absolute paths in DB columns** — works until the host changes; then needs a migration helper. solarscout took this hit; future workloads should not.
+- **Absolute paths in DB columns** — works until the host changes; then needs a migration helper. The first workload on this VPS took this hit; future workloads should not.
 - **OS-level symlinks bridging the local and container paths** — works but hides the abstraction in filesystem state outside the repo, which is fragile across hosts and invisible in code review.
 - **Configuration via a checked-in YAML/TOML config file** — fine for non-secret config, but env vars compose better with Coolify's existing env tab and with `.env` for local dev.
