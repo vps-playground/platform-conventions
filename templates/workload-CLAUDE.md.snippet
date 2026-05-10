@@ -1,0 +1,20 @@
+<!--
+  Paste this block near the top of your workload repo's CLAUDE.md.
+  Source: https://github.com/vps-playground/platform-conventions/blob/main/templates/workload-CLAUDE.md.snippet
+-->
+
+## Platform conventions (vps-playground)
+
+This workload deploys to the shared **vps-playground** VPS. Before any infra,
+deploy, CI, or cross-cutting platform task, fetch the conventions index:
+
+```
+https://raw.githubusercontent.com/vps-playground/platform-conventions/main/CONVENTIONS.md
+```
+
+That index links to ADRs (Architecture Decision Records). Fetch the ADRs
+relevant to the task. Conventions **override** workload-local choices unless
+the deviation is explicitly justified in the PR or a workload-local ADR.
+
+To propose a new convention or amend one: open a PR against
+[`vps-playground/platform-conventions`](https://github.com/vps-playground/platform-conventions).
