@@ -11,7 +11,7 @@ Workloads on the vps-playground VPS run as containers. We need a baseline image-
 1. Keeps redeploys (`git push` → Coolify rebuild) fast.
 2. Doesn't ship build-time tooling or development credentials in the runtime image.
 3. Doesn't hand a privileged shell to anyone who exploits the app.
-4. Matches what solarscout already adopted, so the next workload doesn't reinvent the same shape.
+4. Matches the shape already proven by the first workload on this VPS, so the next workload doesn't reinvent it.
 
 The healthcheck side of the image contract is covered separately in [ADR-0002](0002-healthcheck-endpoint.md).
 
@@ -20,7 +20,7 @@ The healthcheck side of the image contract is covered separately in [ADR-0002](0
 Every workload image:
 
 - **Multi-stage build.** A separate builder stage installs/compiles dependencies; the runtime stage copies only the artifacts. The toolchain (compilers, lockfile resolvers, dev libs) does not ship in the runtime image.
-- **Non-root user.** The runtime stage creates a dedicated unprivileged user (e.g. `app`, `spl`) and the `USER` directive switches to it before `CMD`. Writable directories (`/data`, log paths) are explicitly `chown`'d to that user.
+- **Non-root user.** The runtime stage creates a dedicated unprivileged user (any short name; `app` is a fine default) and the `USER` directive switches to it before `CMD`. Writable directories (`/data`, log paths) are explicitly `chown`'d to that user.
 
 ## Consequences
 
