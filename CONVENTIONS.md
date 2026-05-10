@@ -17,7 +17,7 @@ Canonical conventions for workloads deployed to the **vps-playground** VPS.
 |---|---|---|---|
 | [0001](adr/0001-platform-conventions-location.md) | Conventions repo location & consumption model | Accepted | Conventions live in `vps-playground/platform-conventions`, consumed by WebFetch from each workload's `CLAUDE.md`. |
 | [0002](adr/0002-healthcheck-endpoint.md) | Dedicated `/healthz` healthcheck endpoint | Proposed | Every workload exposes `/healthz` returning plain `200 ok`; Dockerfile `HEALTHCHECK` targets it. Auth-exempt. |
-| [0006](adr/0006-edge-stack-cloudflare-traefik-access.md) | Edge stack — Cloudflare + Traefik + Cloudflare Access | Proposed | DNS on Cloudflare (proxy on), TLS via Coolify Traefik (LE), auth via Cloudflare Access; VPS firewall 22/80/443 only. |
+| [0006](adr/0006-front-door-defaults.md) | Front-door defaults — auth, origin concealment, firewall | Proposed | Cloudflare Access for auth, CF proxy to hide the origin IP, host firewall locked to 22/80/443. Free at our scale (<50 users). |
 
 ## Status values
 
