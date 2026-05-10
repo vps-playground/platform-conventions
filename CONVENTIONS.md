@@ -16,6 +16,7 @@ Canonical conventions for workloads deployed to the **vps-playground** VPS.
 | ID | Topic | Status | Summary |
 |---|---|---|---|
 | [0001](adr/0001-platform-conventions-location.md) | Conventions repo location & consumption model | Accepted | Conventions live in `vps-playground/platform-conventions`, consumed by WebFetch from each workload's `CLAUDE.md`. |
+| [0003](adr/0003-trust-reverse-proxy.md) | Trust the reverse proxy for client IP | Proposed | HTTP workloads behind Traefik trust `X-Forwarded-For` with the exact hop count (default `1`). Wrong trust depth breaks rate-limiting or enables spoofing. |
 
 ## Status values
 
