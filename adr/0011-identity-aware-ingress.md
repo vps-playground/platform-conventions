@@ -64,6 +64,8 @@ Per protected workload:
 
 6. **Local development** — workload code falls back to a hardcoded dev identity only when `DEV_MODE=true`; otherwise the absence of identity headers is a hard 401. This protects against accidentally deploying a workload without forward-auth in place.
 
+7. **Logout**. The Authentik session lives in a central cookie on the auth host (e.g. `auth.3eee17bc.nip.io`), not a per-workload cookie. Workloads expose a logout affordance (link or route) pointing at `/outpost.goauthentik.io/sign_out` on **their own hostname** — the embedded outpost intercepts that path on every protected hostname, invalidates the central session, and redirects to a post-logout page. Sign-out is therefore **platform-wide**: ending the session from one workload signs the user out of every workload protected by the same outpost. That matches the SSO model and is almost always what you want; workloads needing a local-only logout would have to mint and manage their own session cookie alongside Authentik's, outside this convention.
+
 ### Ownership
 
 Platform owns identity infrastructure (Authentik deployment, Traefik middlewares, brand, outpost). Workload owns its image, its routing posture (labels in compose), and its row-level authorization (filtering by `X-Authentik-Uid` in code). Coolify owns runtime substrate.
@@ -87,7 +89,7 @@ Platform owns identity infrastructure (Authentik deployment, Traefik middlewares
 
 **Footguns to know:**
 
-- **`authentik Admins` is the superuser group.** Members bypass every Application-level policy binding. Reserve it for platform operators; **never use it as an application-level authz signal**.
+- **`authentik Admins` is the superuser group, but does NOT implicitly bypass Application-level policy bindings.** Members get Authentik UI admin rights only; they're subject to per-Application group bindings like any other user, and will hit "Request has been denied — Policy binding 'None' returned result 'False'" on workloads they aren't explicitly a member of. Reserve `authentik Admins` for platform-operator UI access; **never use it as a workload authz signal**, and add operators to per-workload groups explicitly when they need workload access. If you do want platform-operator bypass on a specific Application, bind an Expression Policy `return request.user.is_superuser` with `order: 0` and rely on `policy_engine_mode: any` — opt-in per workload, not implicit.
 - **Group changes don't propagate to active sessions.** A user kept-in/removed-from a group sees the old set until they log out and back in. Kill sessions via Directory → Users → Sessions to force re-evaluation.
 - **The Brand domain must match the parent hostname.** Without it, the outpost can't determine which brand a request belongs to and forward-auth fails with a "domain not configured" warning.
 - **The Application form's "Groups" field is metadata, not authz.** Use the **Bindings** tab on the Application detail view to create policy bindings.
