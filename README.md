@@ -24,7 +24,18 @@ Copy [`templates/workload-CLAUDE.md.snippet`](templates/workload-CLAUDE.md.snipp
 
 ## Contributing
 
-Open a PR. New decisions become numbered ADRs — copy [`adr/ADR-template.md`](adr/ADR-template.md), give it the next number, fill it in.
+New decisions become numbered ADRs. Two paths:
+
+- **Manual:** copy [`adr/ADR-template.md`](adr/ADR-template.md), give it the next number, fill it in, open a PR.
+- **Claude Code skill:** run `/convention-uplift` in the session where the decision was made. The skill drafts the ADR from session context, creates a worktree on a new branch, and opens the PR. See [`skills/convention-uplift/SKILL.md`](skills/convention-uplift/SKILL.md).
+
+To enable the skill on a machine, clone this repo and run:
+
+```sh
+just install
+```
+
+This symlinks `skills/convention-uplift/` into `~/.claude/skills/`. `just status` shows install state; `just uninstall` removes the symlink.
 
 ADRs are immutable once **Accepted** — supersede with a new ADR rather than editing in place.
 
