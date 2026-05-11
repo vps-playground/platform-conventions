@@ -19,6 +19,7 @@ Canonical conventions for workloads deployed to the **vps-playground** VPS.
 | [0002](adr/0002-healthcheck-endpoint.md) | Dedicated `/healthz` healthcheck endpoint | Proposed | Every workload exposes `/healthz` returning plain `200 ok`; Dockerfile `HEALTHCHECK` targets it. Auth-exempt. |
 | [0012](adr/0012-nip-io-hex-hostnames.md) | No-domain hostnames via nip.io hex form | Proposed | When no registered domain exists, use `<sub>.<hex-ip>.nip.io`. Cookies scope to the IP-encoded parent; never set cookies with `Domain=nip.io`. |
 | [0011](adr/0011-identity-aware-ingress.md) | Identity-aware ingress via Authentik forward-auth | Proposed | Protected workloads route through Traefik forward-auth → Authentik. Workload code reads `X-Authentik-*` headers; no app-level login flows. Per-host Provider + Application; group gating via Bindings tab. |
+| [0013](adr/0013-whoami-identity-introspection.md) | Identity introspection via `/whoami` | Proposed | Every identity-aware workload exposes `/whoami` returning the resolved `X-Authentik-*` identity as JSON. Subject to normal auth gate (no bypass). Companion to ADR-0011 for diagnostics + scripting. |
 
 ## Status values
 
