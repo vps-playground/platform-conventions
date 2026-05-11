@@ -1,4 +1,4 @@
-# ADR-0003: Identity-aware ingress via Authentik forward-auth
+# ADR-0011: Identity-aware ingress via Authentik forward-auth
 
 - **Status**: Proposed
 - **Date**: 2026-05-11
