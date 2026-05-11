@@ -17,7 +17,7 @@ Canonical conventions for workloads deployed to the **vps-playground** VPS.
 |---|---|---|---|
 | [0001](adr/0001-platform-conventions-location.md) | Conventions repo location & consumption model | Accepted | Conventions live in `vps-playground/platform-conventions`, consumed by WebFetch from each workload's `CLAUDE.md`. |
 | [0002](adr/0002-healthcheck-endpoint.md) | Dedicated `/healthz` healthcheck endpoint | Proposed | Every workload exposes `/healthz` returning plain `200 ok`; Dockerfile `HEALTHCHECK` targets it. Auth-exempt. |
-| [0003](adr/0003-identity-aware-ingress.md) | Identity-aware ingress via Authentik forward-auth | Proposed | Protected workloads route through Traefik forward-auth → Authentik. Workload code reads `X-Authentik-*` headers; no app-level login flows. Per-host Provider + Application; group gating via Bindings tab. |
+| [0011](adr/0011-identity-aware-ingress.md) | Identity-aware ingress via Authentik forward-auth | Proposed | Protected workloads route through Traefik forward-auth → Authentik. Workload code reads `X-Authentik-*` headers; no app-level login flows. Per-host Provider + Application; group gating via Bindings tab. |
 
 ## Status values
 
