@@ -17,6 +17,7 @@ Canonical conventions for workloads deployed to the **vps-playground** VPS.
 |---|---|---|---|
 | [0001](adr/0001-platform-conventions-location.md) | Conventions repo location & consumption model | Accepted | Conventions live in `vps-playground/platform-conventions`, consumed by WebFetch from each workload's `CLAUDE.md`. |
 | [0002](adr/0002-healthcheck-endpoint.md) | Dedicated `/healthz` healthcheck endpoint | Proposed | Every workload exposes `/healthz` returning plain `200 ok`; Dockerfile `HEALTHCHECK` targets it. Auth-exempt. |
+| [0012](adr/0012-nip-io-hex-hostnames.md) | No-domain hostnames via nip.io hex form | Proposed | When no registered domain exists, use `<sub>.<hex-ip>.nip.io`. Cookies scope to the IP-encoded parent; never set cookies with `Domain=nip.io`. |
 
 ## Status values
 
