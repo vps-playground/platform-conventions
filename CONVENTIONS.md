@@ -31,7 +31,11 @@ Each workload repo should include the snippet from [`templates/workload-CLAUDE.m
 
 ## Contributing
 
+Manual flow:
+
 1. Copy `adr/ADR-template.md` → `adr/NNNN-short-title.md` with the next available number.
 2. Fill it in. Keep ADRs small and focused — one decision per ADR.
 3. Open a PR. Discussion happens on the PR.
 4. On merge, update this index table.
+
+Or run the Claude Code skill `/convention-uplift` from the session where the decision was made — it drafts the ADR from session context, opens the PR, and updates this index in the same branch. Install once with `just install` after cloning this repo. See [`skills/convention-uplift/SKILL.md`](skills/convention-uplift/SKILL.md).
