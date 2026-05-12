@@ -20,6 +20,20 @@ Canonical conventions for workloads deployed to the **vps-playground** VPS.
 | [0012](adr/0012-nip-io-hex-hostnames.md) | No-domain hostnames via nip.io hex form | Proposed | When no registered domain exists, use `<sub>.<hex-ip>.nip.io`. Cookies scope to the IP-encoded parent; never set cookies with `Domain=nip.io`. |
 | [0011](adr/0011-identity-aware-ingress.md) | Identity-aware ingress via Authentik forward-auth | Proposed | Protected workloads route through Traefik forward-auth → Authentik. Workload code reads `X-Authentik-*` headers; no app-level login flows. Per-host Provider + Application; group gating via Bindings tab. |
 
+## Where things live
+
+The platform's source-of-truth is intentionally split across repos so each surface stays small and focused. If you're trying to find or change something, start here:
+
+| Concern | Repo | Visibility | Notes |
+|---|---|---|---|
+| Cross-workload ADRs / policy | [`vps-playground/platform-conventions`](https://github.com/vps-playground/platform-conventions) | public | this repo |
+| Host config, firewall, Ansible roles, secret topology | [`vps-playground/vps-control-plane`](https://github.com/vps-playground/vps-control-plane) | private | operational topology that public conventions reference but don't contain |
+| Authentik deployment + per-workload identity blueprints | [`vps-playground/authentik`](https://github.com/vps-playground/authentik) | public | workload Provider/Application/policy bindings are **IaC** here, file-discovered by the worker (see ADR-0011 §2) |
+| Per-workload code, Dockerfile, compose, app-level docs | the workload's own repo | varies | workload-local concerns only |
+| Live operational state (postgres data, Authentik sessions, applied blueprints, group memberships) | the VPS itself | not in git by design | covered by backups, not by convention |
+
+The split follows ADR-0001's "public for shape/policy/structure, private for sensitive topology" boundary. New repos should fit cleanly into one of these slots before being added; if they don't, that's a signal the boundary needs an ADR amendment.
+
 ## Status values
 
 - **Proposed** — open for discussion in a PR; not yet binding.
