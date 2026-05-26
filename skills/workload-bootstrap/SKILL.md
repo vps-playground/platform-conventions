@@ -97,7 +97,41 @@ Confirm with the user.
 If the target dir exists and is non-empty: **stop** and report. Do not
 overwrite.
 
-## 2. Gather inputs
+## 2. Gather workload profile (open-ended, 2-4 sentences)
+
+Before the structured questions, ask **one** free-text question:
+
+```
+In 2-4 sentences, describe what this workload does, who uses it, and what
+its dominant content / traffic / integration profile looks like. Mention
+anything unusual — high-traffic, SEO-critical, heavy background jobs,
+external API calls (LLM, payment, OAuth), large static assets, real-time
+sockets, etc. The skill uses this to make judgment calls below.
+```
+
+The response becomes the **workload profile** — a piece of context the
+skill carries through every subsequent decision. Examples of judgments the
+profile informs:
+
+- **CI shape** — SEO-critical → add a `pnpm exec lighthouse` step;
+  background jobs → mention a `worker:` service in the generated compose;
+  LLM API calls → list the relevant env vars in README's required-env table.
+- **Dockerfile tuning** — low-traffic content site → looser `HEALTHCHECK
+  --interval=60s`; high-traffic → tighter `--interval=10s --timeout=2s`.
+- **SSR vs. SPA preference** — SEO-critical → enforce SSR in the framework
+  config and call it out in CLAUDE.md.
+- **Required env vars in README** — pre-list slots for the integrations
+  the user mentioned (Anthropic key, Stripe key, OAuth client id, etc.).
+- **Persistent volume contents** — if the profile mentions "uploaded
+  files" or "user-generated content" → suggest a `volume:` even if the
+  user picked `none` on the structured question.
+- **Compose extras** — background-jobs profile → propose a second service
+  for the worker; real-time sockets → ensure Traefik websocket settings.
+
+If the profile is thin ("just a personal site"), do not pad — accept the
+default judgments and move on.
+
+## 3. Gather structured choices
 
 Use `AskUserQuestion` to capture the remaining choices in a single batch:
 
@@ -107,7 +141,9 @@ Use `AskUserQuestion` to capture the remaining choices in a single batch:
 2. **Identity model** — `protected` (Authentik forward-auth, ADR-0011) /
    `public` (no auth gate; suitable for personal sites, public APIs).
 3. **Persistence** — `none` (stateless) / `volume:/data` (named Docker
-   volume mounted at `/data`, survives redeploys).
+   volume mounted at `/data`, survives redeploys). The skill may suggest
+   overriding this default based on the workload profile (e.g., "the
+   profile mentions uploaded files; recommending `volume`").
 4. **Container port** — number the runtime listens on. Suggest a sensible
    default per stack (3000 for Node/Rust, 8000 for Python, 80 for static).
 
@@ -117,7 +153,7 @@ Compute and surface for confirmation:
   ask. Compute hex parent with `printf "%02x%02x%02x%02x\n" a b c d`.
 - **Full hostname** — `<name>.<hex>.nip.io` (ADR-0012).
 
-## 3. Render platform-contract files
+## 4. Render platform-contract files
 
 Templates under `templates/_common/`:
 
@@ -147,10 +183,11 @@ appended to `compose.yml` only when `PERSISTENCE=volume`.
 | `{{IDENTITY_MODEL}}` | `protected` or `public` |
 | `{{DATE}}` | today's absolute date in `YYYY-MM-DD` |
 
-## 4. Generate stack-specific files
+## 5. Generate stack-specific files
 
 Inputs for this step:
 
+- **The workload profile** from step 2 — feed it into every judgment call.
 - The platform ADRs (the skill **must fetch** ADR-0002 — `/healthz` contract —
   and read it before generating the runtime entrypoint).
 - The chosen stack.
@@ -182,7 +219,7 @@ in the next session if needed.
   Dockerfile sets `ENV PORT=3000`, the compose `environment:` block lists
   the same value verbatim so Coolify's UI surfaces it.
 
-## 5. Post-render checklist
+## 6. Post-render checklist
 
 Print:
 
@@ -200,7 +237,7 @@ Next steps (do NOT run automatically):
   6. After first deploy: curl -fsS https://{{HOSTNAME}}/healthz   # → "ok"
 ```
 
-## 6. Sanity-check rendered output
+## 7. Sanity-check rendered output
 
 Before exiting, verify:
 
