@@ -11,7 +11,7 @@
 # headers from the proxied request; it never runs the auth flow itself.
 
 services:
-  app:
+  {{NAME}}:
     build:
       context: .
     restart: unless-stopped
