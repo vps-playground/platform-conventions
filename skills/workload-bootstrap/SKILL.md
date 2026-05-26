@@ -195,11 +195,18 @@ Use `AskUserQuestion` to capture the remaining choices in a single batch:
 4. **Container port** — number the runtime listens on. Suggest a sensible
    default per stack (3000 for Node/Rust, 8000 for Python, 80 for static).
 
+5. **Subdomain label** — the left-most label of the public hostname.
+   Defaults to the workload name (e.g. `seriendex.3eee17bc.nip.io`), but
+   may differ when the public identity is not the project name. Personal
+   sites are the canonical case: workload name `personal-site` but
+   subdomain `a-grasso` → `a-grasso.3eee17bc.nip.io`. Always ask, with the
+   workload name pre-filled as the default.
+
 Compute and surface for confirmation:
 
 - **VPS IP** — read from `~/Projects/private/vps/static.md` if present, else
   ask. Compute hex parent with `printf "%02x%02x%02x%02x\n" a b c d`.
-- **Full hostname** — `<name>.<hex>.nip.io` (ADR-0012).
+- **Full hostname** — `<subdomain>.<hex>.nip.io` (ADR-0012).
 
 ## 4. Render platform-contract files
 
@@ -221,11 +228,12 @@ appended to `compose.yml` only when `PERSISTENCE=volume`.
 
 | Token | Source |
 |---|---|
-| `{{NAME}}` | workload name (kebab-case) |
+| `{{NAME}}` | workload name (kebab-case) — used for repo, Coolify app, Traefik router ids |
 | `{{NAME_UNDERSCORE}}` | workload name with `-` → `_` |
+| `{{SUBDOMAIN}}` | left-most label of the public hostname; defaults to `{{NAME}}` but may differ (e.g. `a-grasso` for a `personal-site` workload) |
 | `{{PORT}}` | container port |
 | `{{HEX_PARENT}}` | hex-encoded VPS IP parent, e.g. `3eee17bc.nip.io` |
-| `{{HOSTNAME}}` | `{{NAME}}.{{HEX_PARENT}}` |
+| `{{HOSTNAME}}` | `{{SUBDOMAIN}}.{{HEX_PARENT}}` |
 | `{{STACK}}` | stack label chosen by user |
 | `{{PERSISTENCE}}` | `none` or `volume` |
 | `{{IDENTITY_MODEL}}` | `protected` or `public` |
