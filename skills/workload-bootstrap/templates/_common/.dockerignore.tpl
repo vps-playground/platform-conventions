@@ -1,0 +1,17 @@
+.git/
+.github/
+.gitignore
+.dockerignore
+.env
+.env.*
+!.env.example
+README.md
+docs/
+*.md
+node_modules/
+.venv/
+target/
+dist/
+build/
+.cache/
+.DS_Store
