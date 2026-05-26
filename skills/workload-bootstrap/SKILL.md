@@ -131,13 +131,61 @@ profile informs:
 If the profile is thin ("just a personal site"), do not pad — accept the
 default judgments and move on.
 
+### Profile → stack recommendation
+
+Before asking the user to pick a stack, **derive a recommended stack from
+the profile** and present it as the first option. Heuristics (non-exhaustive,
+use judgment):
+
+| Profile signal | Suggested stack | Reasoning |
+|---|---|---|
+| Content-heavy + SEO-critical + low traffic (blog, CV, docs) | `rust-leptos` (SSR) or `static` | Server-rendered HTML, no SPA hydration cost; static if no dynamic data. |
+| Real-time sockets, high concurrency | `rust` or `go` | Per-connection memory + GC behavior. |
+| LLM API orchestration, heavy text processing | `python` | Native SDK coverage (anthropic, openai, …); ecosystem of NLP libs. |
+| CRUD + form-heavy + moderate JS interactivity | `node` (SvelteKit/Next) | Fastest path for full-stack form flows. |
+| Pure pre-built marketing/docs site | `static` | nginx-alpine, zero runtime. |
+| Background jobs + queues + cron | `python` or `go` | Stronger native scheduler/queue libs than Node by default. |
+
+Present the recommendation in the stack `AskUserQuestion` as the first
+(Recommended) option, with a one-line reason citing the profile signal
+that triggered it. The user can still override.
+
+### Profile → stack-file generation
+
+The profile is **the primary input** to step 5 (generate stack files),
+alongside the platform ADRs. Carry it forward verbatim. Concrete effects on
+the generated code:
+
+- **SSR vs. SPA**: SEO-critical → enforce SSR in the framework config
+  (Leptos `Mode::Ssr`, SvelteKit adapter-node with SSR enabled, Next
+  with `output: 'standalone'` SSR).
+- **Hydration strategy**: low-interactivity content site → islands /
+  selective hydration over full-page hydration; flag this in the generated
+  framework config.
+- **Background workers**: profile mentions cron / queues → generate a
+  second `worker:` service in `compose.yml` and a minimal entrypoint stub.
+- **Sitemap / robots**: profile mentions SEO → add `/sitemap.xml` and
+  `/robots.txt` route stubs in the runtime entrypoint.
+- **Database / migration scaffolding**: profile mentions a DB → generate
+  a `migrations/` dir scaffold and a `db:` recipe in the Justfile, with
+  TODO markers (no actual schema).
+- **Required env vars**: profile mentions LLM / Stripe / OAuth → list
+  those env vars in `README.md`'s required-env table and reference them
+  as `${...}` placeholders in `compose.yml`'s `environment:` block.
+
+When in doubt about whether a profile signal warrants a code change,
+surface the decision to the user as a small AskUserQuestion before
+generating — do not silently change shape.
+
 ## 3. Gather structured choices
 
 Use `AskUserQuestion` to capture the remaining choices in a single batch:
 
-1. **Stack** — open-ended; suggest `rust-leptos` / `node` / `python` /
-   `static` / `go` plus "Other (describe)". For "Other", follow up with a
-   short free-text question on build + runtime.
+1. **Stack** — open-ended; first option is the profile-derived
+   recommendation (above) with a one-line reason. Other options:
+   `rust-leptos` / `node` / `python` / `static` / `go` plus "Other
+   (describe)". For "Other", follow up with a short free-text question
+   on build + runtime.
 2. **Identity model** — `protected` (Authentik forward-auth, ADR-0011) /
    `public` (no auth gate; suitable for personal sites, public APIs).
 3. **Persistence** — `none` (stateless) / `volume:/data` (named Docker
