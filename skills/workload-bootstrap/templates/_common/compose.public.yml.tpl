@@ -9,7 +9,7 @@
 # Identity model: PUBLIC — no Authentik forward-auth on this workload.
 
 services:
-  app:
+  {{NAME}}:
     build:
       context: .
     restart: unless-stopped
