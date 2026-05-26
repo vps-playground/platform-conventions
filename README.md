@@ -20,22 +20,32 @@ Then fetch the ADRs relevant to the current task. Conventions override workload-
 
 ## For workload repos
 
-Copy [`templates/workload-CLAUDE.md.snippet`](templates/workload-CLAUDE.md.snippet) into the top of your repo's `CLAUDE.md`.
+Two ways to start a new workload aligned with these conventions:
+
+- **From scratch:** run the [`workload-bootstrap`](skills/workload-bootstrap/SKILL.md) Claude skill — it renders the compose + Traefik labels + nip.io hostname + healthz routing + CLAUDE.md/Justfile/README/gitignore from static templates, then generates the stack-specific Dockerfile and `/healthz` handler informed by the ADRs and any verified sibling workload.
+- **Retrofit an existing repo:** copy [`templates/workload-CLAUDE.md.snippet`](templates/workload-CLAUDE.md.snippet) into the top of your repo's `CLAUDE.md` so future sessions pull the conventions index automatically.
+
+## Claude skills shipped from this repo
+
+| Skill | Purpose |
+|---|---|
+| [`convention-uplift`](skills/convention-uplift/SKILL.md) | Promote a cross-workload decision from the current session into a numbered ADR PR against this repo. |
+| [`workload-bootstrap`](skills/workload-bootstrap/SKILL.md) | Scaffold a new workload repo targeting the vps-playground VPS (see above). |
+
+To enable every skill on a machine, clone this repo and run:
+
+```sh
+just install
+```
+
+This symlinks each skill under `skills/` into `~/.claude/skills/`. `just status` shows install state; `just uninstall` removes the symlinks; `just reinstall` forces a clean replace.
 
 ## Contributing
 
 New decisions become numbered ADRs. Two paths:
 
 - **Manual:** copy [`adr/ADR-template.md`](adr/ADR-template.md), give it the next number, fill it in, open a PR.
-- **Claude Code skill:** run `/convention-uplift` in the session where the decision was made. The skill drafts the ADR from session context, creates a worktree on a new branch, and opens the PR. See [`skills/convention-uplift/SKILL.md`](skills/convention-uplift/SKILL.md).
-
-To enable the skill on a machine, clone this repo and run:
-
-```sh
-just install
-```
-
-This symlinks `skills/convention-uplift/` into `~/.claude/skills/`. `just status` shows install state; `just uninstall` removes the symlink.
+- **Claude Code skill:** run `/convention-uplift` in the session where the decision was made. The skill drafts the ADR from session context, creates a worktree on a new branch, and opens the PR.
 
 ADRs are immutable once **Accepted** — supersede with a new ADR rather than editing in place.
 
