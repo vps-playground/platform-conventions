@@ -66,7 +66,7 @@ build/runtime model first, then proceed.
 |---|---|
 | Node 22 + pnpm + SvelteKit | `~/Projects/private/seriendex/Dockerfile`, `compose.yml` |
 | Python 3.13 + uv + FastAPI | `~/Projects/private/solar-panel-leads/Dockerfile`, `docker-compose.yaml` |
-| Rust + Leptos | _no sibling yet — first one will become the reference_ |
+| Rust + Leptos | `~/Projects/private/personal-site/Dockerfile`, `compose.yml` — first deployed rust-leptos workload; uses cargo-chef + BuildKit cache mounts + cargo-binstall for tooling |
 | Static (nginx) | _no sibling yet_ |
 
 When a sibling exists, **read its Dockerfile and compose.yml before generating
