@@ -1,57 +1,75 @@
 # platform-conventions task runner
 
-skill_name := "convention-uplift"
 skills_dir := env_var('HOME') / ".claude" / "skills"
-skill_src := justfile_directory() / "skills" / skill_name
-skill_link := skills_dir / skill_name
+skills_src := justfile_directory() / "skills"
+
+# Skills shipped from this repo. To add a new one: drop it under skills/<name>/
+# and append the name to this list.
+SKILLS := "convention-uplift workload-bootstrap"
 
 # Default target lists available recipes.
 default:
     @just --list
 
-# Install the convention-uplift skill by symlinking it into ~/.claude/skills/.
+# Install every skill in SKILLS by symlinking it into ~/.claude/skills/.
+# Idempotent: existing correct symlinks are kept; conflicting ones fail loud
+# unless you `just reinstall`.
 install:
     @mkdir -p "{{skills_dir}}"
-    @if [ -L "{{skill_link}}" ]; then \
-        existing=$(readlink "{{skill_link}}"); \
-        if [ "$existing" = "{{skill_src}}" ]; then \
-            echo "[ok] already installed: {{skill_link}}"; \
-            exit 0; \
-        else \
-            echo "[fail] conflicting symlink: {{skill_link}} -> $existing"; \
-            echo "       run 'just reinstall' to replace it"; \
+    @for name in {{SKILLS}}; do \
+        src="{{skills_src}}/$name"; \
+        link="{{skills_dir}}/$name"; \
+        if [ ! -d "$src" ]; then \
+            echo "[fail] missing skill source: $src"; exit 1; \
+        fi; \
+        if [ -L "$link" ]; then \
+            existing=$(readlink "$link"); \
+            if [ "$existing" = "$src" ]; then \
+                echo "[ok]   already installed: $link"; \
+                continue; \
+            else \
+                echo "[fail] conflicting symlink: $link -> $existing"; \
+                echo "       run 'just reinstall' to replace it"; \
+                exit 1; \
+            fi; \
+        elif [ -e "$link" ]; then \
+            echo "[fail] $link exists and is not a symlink — remove it manually"; \
             exit 1; \
         fi; \
-    elif [ -e "{{skill_link}}" ]; then \
-        echo "[fail] {{skill_link}} exists and is not a symlink — remove it manually"; \
-        exit 1; \
-    fi
-    @ln -s "{{skill_src}}" "{{skill_link}}"
-    @echo "[ok] installed {{skill_name}} -> {{skill_link}}"
+        ln -s "$src" "$link"; \
+        echo "[ok]   installed $name -> $link"; \
+    done
 
-# Remove the convention-uplift skill symlink.
+# Remove every skill symlink owned by this repo.
 uninstall:
-    @if [ -L "{{skill_link}}" ]; then \
-        rm "{{skill_link}}"; \
-        echo "[ok] removed {{skill_link}}"; \
-    else \
-        echo "[skip] nothing to remove at {{skill_link}}"; \
-    fi
+    @for name in {{SKILLS}}; do \
+        link="{{skills_dir}}/$name"; \
+        if [ -L "$link" ]; then \
+            rm "$link"; \
+            echo "[ok]   removed $link"; \
+        else \
+            echo "[skip] nothing to remove at $link"; \
+        fi; \
+    done
 
-# Force reinstall (remove existing link, then install).
+# Force reinstall (remove existing links, then install).
 reinstall: uninstall install
 
-# Show install status of the skill.
+# Show install status of every skill in SKILLS.
 status:
-    @if [ -L "{{skill_link}}" ]; then \
-        target=$(readlink "{{skill_link}}"); \
-        if [ "$target" = "{{skill_src}}" ]; then \
-            echo "[ok] installed: {{skill_link}} -> $target"; \
+    @for name in {{SKILLS}}; do \
+        link="{{skills_dir}}/$name"; \
+        src="{{skills_src}}/$name"; \
+        if [ -L "$link" ]; then \
+            target=$(readlink "$link"); \
+            if [ "$target" = "$src" ]; then \
+                echo "[ok]   installed: $link -> $target"; \
+            else \
+                echo "[warn] symlink points elsewhere: $link -> $target"; \
+            fi; \
+        elif [ -e "$link" ]; then \
+            echo "[warn] $link exists but is not a symlink"; \
         else \
-            echo "[warn] symlink points elsewhere: {{skill_link}} -> $target"; \
+            echo "[none] $name not installed"; \
         fi; \
-    elif [ -e "{{skill_link}}" ]; then \
-        echo "[warn] {{skill_link}} exists but is not a symlink"; \
-    else \
-        echo "[none] not installed"; \
-    fi
+    done
