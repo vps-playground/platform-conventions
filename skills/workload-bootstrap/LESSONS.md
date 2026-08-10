@@ -68,38 +68,22 @@ current on the day, so this cannot be predicted from knowledge — only observed
 
 ## `protected` workloads need three layers, not two
 
-The post-render checklist ends at "deploy in Coolify → curl /healthz". For a
-protected workload that is not enough to reach the app:
+**Now encoded as steps 7-10 of the §6 checklist in SKILL.md.** Kept here only
+as the reason those steps exist: skipping the outpost binding produces a 404
+from Authentik while the workload is completely healthy, which is
+indistinguishable from a broken deploy unless you check the response headers.
 
-1. **Workload repo** — Traefik labels with `middlewares=authentik@file`, an
-   auth-exempt `/healthz` router at higher priority, code reading
-   `X-Authentik-*`. (The skill generates this.)
-2. **`vps-playground/authentik` → `blueprints/<name>.yaml`** — Proxy Provider
-   in `forward_single` mode + Application for that exact hostname. Copy the
-   nearest sibling blueprint; a lowercase `sed` will miss the capitalised
-   `name:` and the `meta_description`. Pushing this **redeploys Authentik and
-   drops SSO platform-wide for about a minute.**
-3. **Bind the Application to the embedded outpost** — Applications → Outposts →
-   `authentik Embedded Outpost` → Edit → Applications → tick → Update.
-   **Manual. A blueprint cannot append to the outpost's Application list
-   without replacing it.**
-
-Skip step 3 and the workload returns 404 from Authentik while being completely
-healthy — `/healthz` answers 200, the container is up, the labels are right.
-
-**Rule:** when identity model is `protected`, generate the blueprint (the skill
-already knows the name and hostname) and end the checklist with the outpost
-click called out as a required manual step.
+Prefer this shape for everything in this file: if a lesson can become a
+process step, make it one. A checklist item fires whether or not anyone read
+the background; a note only works if someone remembers to look.
 
 ## The diagnostic ladder belongs in every generated README
 
-Three unrelated failures are indistinguishable from a browser:
+**Now generated — it is a "When it looks broken" section in
+`templates/_common/README.md.tpl`.** Kept here as the rationale: all three
+failures are indistinguishable from a browser, so the workload has to ship the
+table that tells them apart.
 
-| Symptom | Meaning |
-|---|---|
-| 404 with `x-powered-by: authentik` | Workload healthy; outpost binding missing |
-| 503 `no available server` | Router registered, container down or crash-looping → `docker logs` |
-| 404 plain `text/plain` | Traefik's default backend; no router matched at all |
 
 Healthy protected workload: `/healthz` → `200 ok` unauthenticated, `/` → 302 to
 Authentik. Those two requests prove the listener and the identity layer
