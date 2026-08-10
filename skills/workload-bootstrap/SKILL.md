@@ -298,6 +298,42 @@ Next steps (do NOT run automatically):
   6. After first deploy: curl -fsS https://{{HOSTNAME}}/healthz   # → "ok"
 ```
 
+### Identity wiring — `protected` workloads only
+
+A protected workload needs THREE layers. The steps above cover only the first;
+without the other two the workload answers 404 from Authentik while being
+completely healthy — `/healthz` returns 200, the container is up, the Traefik
+labels are correct. Emit these steps as part of the checklist, do not leave
+them to the user to remember:
+
+```
+  7. Create the Authentik blueprint:
+       cd ~/Projects/private/vps-playground/authentik/blueprints
+       cp <nearest-sibling>.yaml {{NAME}}.yaml
+     Substitute the workload name and hostname. A lowercase sed MISSES the
+     capitalised `name:` and the `meta_description` — check both by hand.
+
+  8. Commit and push it. The push IS the deploy: the Authentik worker watches
+     the /blueprints/ mount and re-applies.
+     ⚠  This redeploys Authentik and drops SSO across EVERY protected workload
+        for about a minute. Do not do it mid-demo.
+
+  9. Bind the Application to the embedded outpost — MANUAL, cannot be scripted:
+       Authentik admin → Applications → Outposts → `authentik Embedded Outpost`
+       → Edit → Applications tab → tick `{{NAME}}` → Update
+     A blueprint cannot append to the outpost's Application list without
+     replacing it, which is why this stays a click.
+
+ 10. Verify both layers independently:
+       curl -sS -o /dev/null -w '%{http_code}\n' https://{{HOSTNAME}}/healthz  # 200
+       curl -sS -o /dev/null -w '%{http_code}\n' https://{{HOSTNAME}}/         # 302
+     200 + 302 is the healthy state. 200 + 404 means step 9 was skipped.
+```
+
+Generating the blueprint file itself is mechanical — the skill already knows
+`{{NAME}}` and `{{HOSTNAME}}` — so prefer writing it and having the user review,
+over instructing them to write it.
+
 ## 7. Sanity-check rendered output
 
 Before exiting, verify:
