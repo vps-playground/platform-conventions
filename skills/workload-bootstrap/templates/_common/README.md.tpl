@@ -47,19 +47,16 @@ ADR-0002 for the contract.
 
 ## When it looks broken
 
-Three unrelated failures are indistinguishable from a browser. The response
-tells you which one you have:
+All three look identical from a browser; the response tells them apart:
 
 | Symptom | Meaning |
 |---|---|
-| 404 with `x-powered-by: authentik` | Workload is healthy; the Application is not bound to the embedded outpost |
-| 503 `no available server` | Router registered but no backend — container down or crash-looping. `docker logs` |
-| 404 plain, `content-type: text/plain` | Traefik's default backend; no router matched at all |
+| 404, `x-powered-by: authentik` | Healthy — Application not bound to the embedded outpost |
+| 503 `no available server` | Router registered, no backend. Container down → `docker logs` |
+| 404 plain, `text/plain` | Traefik default backend; no router matched |
 
-Healthy protected workload: `/healthz` → `200 ok` without credentials, `/` →
-302 to Authentik. Those two requests prove the listener and the identity layer
-separately. A Let's Encrypt cert only issues after a route first resolves, so
-`CN=TRAEFIK DEFAULT CERT` means nothing has routed successfully yet.
+Healthy: `/healthz` → `200 ok` uncredentialed, `/` → 302 to Authentik.
+`CN=TRAEFIK DEFAULT CERT` means no route has resolved yet.
 
 ## Conventions
 
