@@ -35,11 +35,6 @@ The skeleton is split into two layers:
 
 Selectivity is the success metric: ask only what cannot be inferred. Provide
 sensible defaults for everything else.
-
-**Before generating any stack files, read `LESSONS.md` in this skill's
-directory.** It records failures that reached a broken deploy on the VPS and
-the checks that catch them. Every entry cost a debugging session. After a run,
-append anything new that broke in a way the skeleton could have prevented.
 </objective>
 
 <scope>
@@ -276,6 +271,17 @@ in the next session if needed.
   `XFF_DEPTH=1`; uvicorn needs `--proxy-headers --forwarded-allow-ips '*'`).
 - **No DB pings in `/healthz`** (ADR-0002). It returns `200 ok`
   unconditionally.
+- **Everything the runtime `CMD` imports is a prod dependency.** Runtime stages
+  install without dev deps, so a preload copied from a sibling resolves locally
+  and never in the image. Copy the sibling's buildfile entries alongside its
+  Dockerfile pattern, and generate a test asserting this.
+- **Never bind-mount repo files into a container running as a non-root uid.**
+  Coolify's clone ownership makes them unreadable and the container fails at
+  startup. Bake them into an image; have a process that already holds the right
+  identity apply them (for databases, the migration runner — which can also be
+  idempotent, unlike an init directory).
+- **Name every package whose build script the stack needs.** Modern package
+  managers deny build scripts by default and warn rather than fail.
 - **Dockerfile and `compose.yml` env defaults must agree.** When the
   Dockerfile sets `ENV PORT=3000`, the compose `environment:` block lists
   the same value verbatim so Coolify's UI surfaces it.
@@ -300,39 +306,28 @@ Next steps (do NOT run automatically):
 
 ### Identity wiring — `protected` workloads only
 
-A protected workload needs THREE layers. The steps above cover only the first;
-without the other two the workload answers 404 from Authentik while being
-completely healthy — `/healthz` returns 200, the container is up, the Traefik
-labels are correct. Emit these steps as part of the checklist, do not leave
-them to the user to remember:
+Three layers are required. Steps 1-6 cover only the first; without the rest the
+workload returns 404 from Authentik while healthy. Generate `{{NAME}}.yaml` from
+the nearest sibling blueprint and emit:
 
 ```
-  7. Create the Authentik blueprint:
-       cd ~/Projects/private/vps-playground/authentik/blueprints
-       cp <nearest-sibling>.yaml {{NAME}}.yaml
-     Substitute the workload name and hostname. A lowercase sed MISSES the
-     capitalised `name:` and the `meta_description` — check both by hand.
+  7. Review authentik/blueprints/{{NAME}}.yaml, then commit and push it.
+     The push is the deploy — the worker watches the /blueprints/ mount.
+     ⚠  Redeploys Authentik; SSO drops across all protected workloads ~1 min.
 
-  8. Commit and push it. The push IS the deploy: the Authentik worker watches
-     the /blueprints/ mount and re-applies.
-     ⚠  This redeploys Authentik and drops SSO across EVERY protected workload
-        for about a minute. Do not do it mid-demo.
-
-  9. Bind the Application to the embedded outpost — MANUAL, cannot be scripted:
+  8. Bind the Application to the embedded outpost (manual — a blueprint cannot
+     append to the outpost's Application list without replacing it):
        Authentik admin → Applications → Outposts → `authentik Embedded Outpost`
-       → Edit → Applications tab → tick `{{NAME}}` → Update
-     A blueprint cannot append to the outpost's Application list without
-     replacing it, which is why this stays a click.
+       → Edit → Applications → tick `{{NAME}}` → Update
 
- 10. Verify both layers independently:
-       curl -sS -o /dev/null -w '%{http_code}\n' https://{{HOSTNAME}}/healthz  # 200
-       curl -sS -o /dev/null -w '%{http_code}\n' https://{{HOSTNAME}}/         # 302
-     200 + 302 is the healthy state. 200 + 404 means step 9 was skipped.
+  9. Verify both layers:
+       curl -o /dev/null -w '%{http_code}\n' https://{{HOSTNAME}}/healthz  # 200
+       curl -o /dev/null -w '%{http_code}\n' https://{{HOSTNAME}}/         # 302
+     200 + 404 means step 8 was skipped.
 ```
 
-Generating the blueprint file itself is mechanical — the skill already knows
-`{{NAME}}` and `{{HOSTNAME}}` — so prefer writing it and having the user review,
-over instructing them to write it.
+When copying a sibling blueprint, a lowercase `sed` misses the capitalised
+`name:` and the `meta_description`.
 
 ## 7. Sanity-check rendered output
 
@@ -344,18 +339,15 @@ Before exiting, verify:
 - `CLAUDE.md` starts with the platform-conventions snippet.
 - The runtime entrypoint registers a `/healthz` route returning `200 ok`.
 
-Then — and this is the check that actually matters — **build the image and run
-it**:
+Then build and run it — the checks above verify the contract is written down,
+not that it holds:
 
 - `docker build` the generated Dockerfile.
-- Run the container with its real `CMD` (not a simplified `node build/index.js`
-  or equivalent) and assert `GET /healthz` returns `200 ok`.
-- Run the stack's own install / lint / test / build and report the results
-  honestly.
-
-The structural checks above verify the platform contract is *written down*. Only
-this verifies it *holds*. Both deploy-blocking bugs on the restbudget bootstrap
-passed every structural check and would have died here. See `LESSONS.md`.
+- Run the container with its real `CMD`, verbatim — not a simplified
+  equivalent — and assert `GET /healthz` returns `200 ok`.
+- Run the stack's own install, lint, test and build. Report results honestly;
+  version ranges resolve to whatever is current, so breakage here is only
+  observable, never predictable.
 
 Report any failure as a skill bug, with the path of the offending file.
 
