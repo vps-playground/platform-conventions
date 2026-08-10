@@ -35,6 +35,11 @@ The skeleton is split into two layers:
 
 Selectivity is the success metric: ask only what cannot be inferred. Provide
 sensible defaults for everything else.
+
+**Before generating any stack files, read `LESSONS.md` in this skill's
+directory.** It records failures that reached a broken deploy on the VPS and
+the checks that catch them. Every entry cost a debugging session. After a run,
+append anything new that broke in a way the skeleton could have prevented.
 </objective>
 
 <scope>
@@ -302,6 +307,19 @@ Before exiting, verify:
   router at priority 100.
 - `CLAUDE.md` starts with the platform-conventions snippet.
 - The runtime entrypoint registers a `/healthz` route returning `200 ok`.
+
+Then — and this is the check that actually matters — **build the image and run
+it**:
+
+- `docker build` the generated Dockerfile.
+- Run the container with its real `CMD` (not a simplified `node build/index.js`
+  or equivalent) and assert `GET /healthz` returns `200 ok`.
+- Run the stack's own install / lint / test / build and report the results
+  honestly.
+
+The structural checks above verify the platform contract is *written down*. Only
+this verifies it *holds*. Both deploy-blocking bugs on the restbudget bootstrap
+passed every structural check and would have died here. See `LESSONS.md`.
 
 Report any failure as a skill bug, with the path of the offending file.
 
