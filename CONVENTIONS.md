@@ -21,6 +21,7 @@ Canonical conventions for workloads deployed to the **vps-playground** VPS.
 | [0011](adr/0011-identity-aware-ingress.md) | Identity-aware ingress via Authentik forward-auth | Proposed | Protected workloads route through Traefik forward-auth → Authentik. Workload code reads `X-Authentik-*` headers; no app-level login flows. Per-host Provider + Application; group gating via Bindings tab. |
 | [0015](adr/0015-vps-patching-cadence.md) | VPS patching cadence — nightly unattended-upgrades with auto-reboot | Proposed | unattended-upgrades runs nightly across the Ubuntu security pocket *and* Docker's apt origin. Host auto-reboots at 04:00 UTC when a kernel update lands. Workloads must be reboot-safe. |
 | [0016](adr/0016-namespace-service-names.md) | Namespace bundled service names on the shared Coolify network | Proposed | Bundled backing services (DB, cache, etc.) must use a workload-prefixed name (e.g. `closet-db`, not `postgres`) and host vars must point at it. The shared `coolify` network makes bare generic names collide with foreign containers. |
+| [0017](adr/0017-verify-images-boot-in-ci.md) | Verify images boot in CI; empty env vars are unset | Proposed | CI must run each built image with its real `CMD` and the env its compose file supplies, asserting `/healthz`. Compose `${VAR:-}` yields `''`, not unset — config schemas must treat it as unset so an unconfigured optional dependency degrades rather than killing the container. |
 
 ## Where things live
 
